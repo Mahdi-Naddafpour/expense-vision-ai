@@ -1,7 +1,8 @@
-from fastapi import FastAPI, File, UploadFile, Request, HTTPException
-from fastapi.responses import HTMLResponse, StreamingResponse
+from fastapi import FastAPI, File, UploadFile, Request, HTTPException, Form
+from fastapi.responses import HTMLResponse, StreamingResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
+from starlette.middleware.sessions import SessionMiddleware
 import shutil
 import os
 import csv
@@ -26,14 +27,32 @@ from app.database import (
 
 app = FastAPI()
 
+app.add_middleware(SessionMiddleware, secret_key="super-secret-login-key-change-this")
+
 UPLOAD_FOLDER = "temp"
+STATIC_FOLDER = "static"
+
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+os.makedirs(STATIC_FOLDER, exist_ok=True)
 
 pytesseract.pytesseract.tesseract_cmd = r"C:\Program Files\Tesseract-OCR\tesseract.exe"
 POPPLER_PATH = r"C:\poppler\Library\bin"
 
 templates = Jinja2Templates(directory="templates")
-app.mount("/static", StaticFiles(directory="static"), name="static")
+app.mount("/static", StaticFiles(directory=STATIC_FOLDER), name="static")
+
+# demo credentials for portfolio project
+DEMO_USERNAME = "admin"
+DEMO_PASSWORD = "1234"
+
+
+def is_logged_in(request: Request) -> bool:
+    return request.session.get("user") is not None
+
+
+def require_login(request: Request):
+    if not is_logged_in(request):
+        raise HTTPException(status_code=401, detail="Not authenticated")
 
 
 def ocr_image(image_path: str) -> str:
@@ -67,11 +86,49 @@ def startup_event():
 
 @app.get("/")
 def read_root():
-    return {"message": "Expense Vision AI + SQLite is running"}
+    return RedirectResponse(url="/login", status_code=302)
+
+
+@app.get("/login", response_class=HTMLResponse)
+def login_page(request: Request):
+    if is_logged_in(request):
+        return RedirectResponse(url="/dashboard", status_code=302)
+
+    return templates.TemplateResponse(
+        "login.html",
+        {
+            "request": request,
+            "error": None
+        }
+    )
+
+
+@app.post("/login", response_class=HTMLResponse)
+def login_submit(request: Request, username: str = Form(...), password: str = Form(...)):
+    if username == DEMO_USERNAME and password == DEMO_PASSWORD:
+        request.session["user"] = username
+        return RedirectResponse(url="/dashboard", status_code=302)
+
+    return templates.TemplateResponse(
+        "login.html",
+        {
+            "request": request,
+            "error": "Invalid username or password"
+        }
+    )
+
+
+@app.get("/logout")
+def logout(request: Request):
+    request.session.clear()
+    return RedirectResponse(url="/login", status_code=302)
 
 
 @app.get("/dashboard", response_class=HTMLResponse)
 def dashboard(request: Request):
+    if not is_logged_in(request):
+        return RedirectResponse(url="/login", status_code=302)
+
     summary = get_document_summary()
     rows = get_documents_table()
     chart_data = get_chart_data()
@@ -82,13 +139,17 @@ def dashboard(request: Request):
             "request": request,
             "summary": summary,
             "rows": rows,
-            "chart_data": chart_data
+            "chart_data": chart_data,
+            "user": request.session.get("user")
         }
     )
 
 
 @app.post("/upload")
-async def upload_file(file: UploadFile = File(...)):
+async def upload_file(request: Request, file: UploadFile = File(...)):
+    if not is_logged_in(request):
+        return {"error": "Not authenticated"}
+
     try:
         file_path = os.path.join(UPLOAD_FOLDER, file.filename)
 
@@ -132,7 +193,10 @@ async def upload_file(file: UploadFile = File(...)):
 
 
 @app.get("/documents")
-def list_documents(document_type: str | None = None):
+def list_documents(request: Request, document_type: str | None = None):
+    if not is_logged_in(request):
+        return {"error": "Not authenticated"}
+
     try:
         documents = get_all_documents(document_type=document_type)
         return {
@@ -144,7 +208,10 @@ def list_documents(document_type: str | None = None):
 
 
 @app.get("/documents/table")
-def documents_table(document_type: str | None = None):
+def documents_table(request: Request, document_type: str | None = None):
+    if not is_logged_in(request):
+        return {"error": "Not authenticated"}
+
     try:
         rows = get_documents_table(document_type=document_type)
         return {
@@ -156,7 +223,10 @@ def documents_table(document_type: str | None = None):
 
 
 @app.get("/documents/summary")
-def documents_summary():
+def documents_summary(request: Request):
+    if not is_logged_in(request):
+        return {"error": "Not authenticated"}
+
     try:
         return get_document_summary()
     except Exception as e:
@@ -164,7 +234,10 @@ def documents_summary():
 
 
 @app.get("/documents/chart-data")
-def documents_chart_data():
+def documents_chart_data(request: Request):
+    if not is_logged_in(request):
+        return {"error": "Not authenticated"}
+
     try:
         return get_chart_data()
     except Exception as e:
@@ -172,7 +245,10 @@ def documents_chart_data():
 
 
 @app.get("/documents/{document_id}")
-def get_single_document(document_id: int):
+def get_single_document(request: Request, document_id: int):
+    if not is_logged_in(request):
+        return {"error": "Not authenticated"}
+
     try:
         document = get_document_by_id(document_id)
 
@@ -185,7 +261,10 @@ def get_single_document(document_id: int):
 
 
 @app.delete("/delete/{doc_id}")
-def delete_document(doc_id: int):
+def delete_document(request: Request, doc_id: int):
+    if not is_logged_in(request):
+        return {"error": "Not authenticated"}
+
     try:
         deleted = delete_document_by_id(doc_id)
 
@@ -200,7 +279,10 @@ def delete_document(doc_id: int):
 
 
 @app.get("/export/csv")
-def export_csv():
+def export_csv(request: Request):
+    if not is_logged_in(request):
+        return {"error": "Not authenticated"}
+
     try:
         conn = get_connection()
         cursor = conn.cursor()
