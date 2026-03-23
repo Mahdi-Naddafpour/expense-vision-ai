@@ -1,41 +1,40 @@
-# Expense Vision AI
+# 🚀 Expense Vision AI
 
-An AI-powered document processing system built with FastAPI.
+AI-powered document processing system for extracting, storing, and analyzing financial documents like receipts, invoices, and paystubs.
 
-## 🚀 Features
+---
 
-- Upload receipts, invoices, and paystubs
-- OCR text extraction (Tesseract)
-- AI-based structured data extraction
-- SQLite database storage
-- Interactive dashboard with charts
-- Search and filter documents
-- Delete documents
-- Export data to CSV
+## 📌 Features
 
-## 🧠 Tech Stack
+- 📤 Upload documents (images / PDFs)
+- 🤖 AI-based data extraction
+- 🧾 Supports:
+  - Receipts
+  - Invoices
+  - Paystubs
+- 📊 Interactive dashboard with analytics
+- 🔍 Search & filter documents
+- 🗑 Delete documents
+- 📥 Export data to CSV
+- 🌐 Deployed live on Render
 
-- Python
-- FastAPI
-- SQLite
-- Tesseract OCR
-- OpenAI API
-- HTML / CSS / JavaScript
-- Chart.js
+---
 
-## 📸 Dashboard
+## 🖥️ Live Demo
 
-![Dashboard](screenshot.png)
+👉 https://expense-vision-ai.onrender.com/dashboard
 
-## ⚙️ Installation
+---
 
-```bash
-git clone https://github.com/YOUR_USERNAME/expense-vision.git
-cd expense-vision
+## 🛠️ Tech Stack
 
-python -m venv venv
-venv\Scripts\activate
+- **Backend:** FastAPI (Python)
+- **Frontend:** HTML, CSS, JavaScript
+- **Database:** SQLite
+- **AI Processing:** Custom extraction logic
+- **Deployment:** Render
+- **Version Control:** Git & GitHub
 
-pip install -r requirements.txt
+---
 
-uvicorn app.main:app --reload
+## 📂 Project Structure
