@@ -55,7 +55,7 @@ This project demonstrates real-world backend development skills combined with AI
 
 **AI:**
 
-* OpenAI API (GPT-based extraction)
+AI-powered document parsing using OpenAI GPT models to extract structured financial data from unstructured documents
 
 **Frontend:**
 
