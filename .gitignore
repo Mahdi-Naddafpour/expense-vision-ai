@@ -1,8 +1,6 @@
+.env
 venv/
 __pycache__/
-*.pyc
-.env
-documents.db
-temp/
-*.log
+*.db
 uploads/
+temp/
