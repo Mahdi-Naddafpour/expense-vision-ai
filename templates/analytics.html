@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Analytics</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        body {
+            font-family: Arial;
+            background: #f4f6f8;
+            margin: 0;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: auto;
+            padding: 24px;
+        }
+
+        .topbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+
+        .btn {
+            padding: 10px 14px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: bold;
+            margin-left: 8px;
+        }
+
+        .btn-dark { background:#111827; color:white; }
+        .btn-blue { background:#2563eb; color:white; }
+
+        .card {
+            background:white;
+            padding:20px;
+            border-radius:12px;
+            box-shadow:0 2px 10px rgba(0,0,0,0.05);
+            margin-bottom:20px;
+        }
+
+        .chart-row {
+            display:flex;
+            gap:20px;
+            flex-wrap:wrap;
+        }
+
+        .chart-box {
+            flex:1;
+            min-width:300px;
+            max-width:500px;
+            height:280px;
+        }
+
+        table {
+            width:100%;
+            border-collapse:collapse;
+        }
+
+        th, td {
+            padding:10px;
+            border-bottom:1px solid #eee;
+            text-align:left;
+        }
+
+        th { background:#f9fafb; }
+    </style>
+</head>
+
+<body>
+
+<div class="container">
+
+    <div class="topbar">
+        <h1>Analytics</h1>
+
+        <div>
+            <a href="/dashboard" class="btn btn-dark">⬅ Dashboard</a>
+            <a href="/logout" class="btn btn-blue">Logout</a>
+        </div>
+    </div>
+
+    <div class="card">
+        <h2>Filter by Date</h2>
+
+        <form method="get" action="/analytics">
+            From:
+            <input type="date" name="date_from" value="{{ date_from }}">
+
+            To:
+            <input type="date" name="date_to" value="{{ date_to }}">
+
+            <button type="submit">Apply</button>
+        </form>
+    </div>
+
+    <div class="card">
+        <h2>Summary</h2>
+
+        <table>
+            <tr>
+                <th>Type</th>
+                <th>Count</th>
+                <th>Total Amount</th>
+            </tr>
+
+            {% for item in items %}
+            <tr>
+                <td>{{ item.document_type }}</td>
+                <td>{{ item.count }}</td>
+                <td>${{ "%.2f"|format(item.total_amount) }}</td>
+            </tr>
+            {% endfor %}
+        </table>
+    </div>
+
+    <div class="card">
+        <h2>Charts</h2>
+
+        <div class="chart-row">
+            <div class="chart-box">
+                <canvas id="countChart"></canvas>
+            </div>
+
+            <div class="chart-box">
+                <canvas id="amountChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <h2>Documents Details</h2>
+
+        <table>
+            <tr>
+                <th>Type</th>
+                <th>Date</th>
+                <th>Amount</th>
+                <th>Vendor / Company</th>
+                <th>File</th>
+            </tr>
+
+            {% for doc in documents %}
+            <tr>
+                <td>{{ doc.document_type }}</td>
+                <td>{{ doc.document_date or "-" }}</td>
+                <td>${{ doc.total_amount or 0 }}</td>
+
+                <td>
+                    {% if doc.summary.vendor %}
+                        {{ doc.summary.vendor }}
+                    {% elif doc.summary.company %}
+                        {{ doc.summary.company }}
+                    {% else %}
+                        -
+                    {% endif %}
+                </td>
+
+                <td>{{ doc.filename }}</td>
+            </tr>
+            {% endfor %}
+        </table>
+    </div>
+
+</div>
+
+<script>
+    const items = {{ items | tojson }};
+
+    const labels = items.map(i => i.document_type);
+    const counts = items.map(i => i.count);
+    const amounts = items.map(i => i.total_amount);
+
+    new Chart(document.getElementById("countChart"), {
+        type: "bar",
+        data: {
+            labels: labels,
+            datasets: [{
+                label: "Count",
+                data: counts
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false
+        }
+    });
+
+    new Chart(document.getElementById("amountChart"), {
+        type: "line",
+        data: {
+            labels: labels,
+            datasets: [{
+                label: "Total Amount",
+                data: amounts
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false
+        }
+    });
+</script>
+
+</body>
+</html>
