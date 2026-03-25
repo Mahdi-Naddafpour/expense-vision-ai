@@ -37,7 +37,7 @@ app.add_middleware(
     secret_key="super-secret-login-key-change-this"
 )
 
-UPLOAD_FOLDER = "temp"
+UPLOAD_FOLDER = os.getenv("UPLOAD_FOLDER", "temp")
 STATIC_FOLDER = "static"
 
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)

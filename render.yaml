@@ -1,0 +1,16 @@
+services:
+  - type: web
+    name: expense-vision-ai
+    runtime: python
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: DB_NAME
+        value: /tmp/documents.db
+      - key: UPLOAD_FOLDER
+        value: /tmp
+      - key: PYTHON_VERSION
+        value: 3.11.11

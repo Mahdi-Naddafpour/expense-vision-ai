@@ -1,8 +1,9 @@
+import os
 import sqlite3
 import json
 from datetime import datetime
 
-DB_NAME = "documents.db"
+DB_NAME = os.getenv("DB_NAME", "documents.db")
 
 
 def get_connection():
