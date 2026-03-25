@@ -8,7 +8,7 @@ load_dotenv()
 
 # گرفتن API KEY از .env
 api_key = os.getenv("OPENAI_API_KEY")
-print("API KEY:", api_key)
+
 
 client = OpenAI(api_key=api_key)
 
